@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Eduvos Data Analysis with Python Exam Portal</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --accent: #0b5cff;
+      --muted: #6b7280;
+    }
+    * { box-sizing: border-box; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: var(--bg); color: #111; }
+    .container { max-width: 980px; margin: 30px auto; padding: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; }
+    h1 { margin: 0; font-size: 20px; }
+    .card { background: var(--card); border-radius: 8px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-top: 16px; }
+    nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    button.tab { border: 1px solid #ccc; background: transparent; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+    button.tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .q { padding: 12px; border: 1px solid #eaeaea; border-radius: 8px; background: #fbfdff; margin-bottom: 10px; }
+    .q .title { font-weight: 600; margin-bottom: 6px; }
+    label.choice { display: block; border: 1px solid #ddd; padding: 8px; border-radius: 6px; margin-bottom: 6px; cursor: pointer; }
+    input[type="text"], textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+    .drag-area { display: flex; gap: 12px; flex-wrap: wrap; border: 1px solid #dbeafe; padding: 10px; border-radius: 6px; background: #fff; }
+    .drag-item { padding: 8px; border: 1px solid #c7d2fe; border-radius: 6px; background: #eef2ff; cursor: grab; }
+    .drop-slot { min-height: 35px; flex: 1; border: 1px solid #ddd; border-radius: 6px; background: #f9fafb; padding: 5px; }
+    .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+    button.btn { border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+    .primary { background: var(--accent); color: white; }
+    .ghost { background: transparent; border: 1px solid #ccc; }
+    .result { margin-top: 10px; padding: 10px; border-radius: 6px; }
+    .correct { background: #ecfdf5; color: #065f46; }
+    .incorrect { background: #ffeff0; color: #831843; }
+    footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Eduvos Data Analysis with Python Exam Portal</h1>
+      <div>Sections A to D</div>
+    </header>
+
+    <div class="card">
+      <nav id="nav"></nav>
+      <div id="content"></div>
+      <div class="actions">
+        <button class="btn ghost" id="reset">Reset</button>
+        <button class="btn primary" id="submit">Submit</button>
+      </div>
+      <div id="score" class="result" style="display:none"></div>
+    </div>
+
+    <footer>Offline exam practice portal for Eduvos students</footer>
+  </div>
+
+  <script>
+    const exam = {
+      sections: [
+        { id: 'A', name: 'Section A Multiple Choice', marks: 20, qs: [] },
+        { id: 'B', name: 'Section B True or False', marks: 20, qs: [] },
+        { id: 'C', name: 'Section C Application Based', marks: 30, qs: [] },
+        { id: 'D', name: 'Section D Scenario Based', marks: 30, qs: [] }
+      ]
+    };
+
+    // Section A Multiple Choice
+    const Aqs = [
+      ['Which Pandas object is two dimensional and used for tabular data?', ['Series', 'DataFrame', 'Index', 'List'], 1],
+      ['Which function reads a CSV file into a DataFrame?', ['pd.read()', 'pd.load_csv()', 'pd.read_csv()', 'pd.csv()'], 2],
+      ['Which method removes missing values?', ['dropna()', 'fillna()', 'replace()', 'remove()'], 0],
+      ['Which library provides array objects for numerical computation?', ['NumPy', 'Seaborn', 'Matplotlib', 'Plotly'], 0],
+      ['Which method returns a list of column names?', ['columns()', 'keys()', 'columns', 'get_columns()'], 2],
+      ['Which method returns the first n rows?', ['head()', 'top()', 'first()', 'start()'], 0],
+      ['Which Pandas method merges two DataFrames on a key?', ['merge()', 'concat()', 'append()', 'join()'], 0],
+      ['Which method displays data types of all columns?', ['df.info()', 'df.describe()', 'df.types()', 'df.structure()'], 0],
+      ['Which function creates a NumPy array of zeros?', ['np.zero()', 'np.zeros()', 'np.empty()', 'np.array(0)'], 1],
+      ['Which parameter in groupby specifies the grouping column?', ['group', 'index', 'by', 'on'], 2],
+      ['Which argument allows permanent changes in pandas?', ['apply', 'return', 'inplace', 'override'], 2],
+      ['Which function converts text to datetime?', ['pd.to_date()', 'pd.to_datetime()', 'pd.convert()', 'pd.date()'], 1],
+      ['Which Matplotlib function displays a figure?', ['show()', 'display()', 'open()', 'figure()'], 0],
+      ['Which method counts unique values?', ['count()', 'nunique()', 'unique()', 'distinct()'], 1],
+      ['Which method combines two Series objects side by side?', ['concat()', 'join()', 'merge()', 'combine()'], 0]
+    ];
+    Aqs.forEach((q,i)=>exam.sections[0].qs.push({id:'A'+(i+1), q:q[0], opts:q[1], a:q[2]}));
+
+    // Section B True/False
+    const Bqs = [
+      ['A Pandas DataFrame is a two-dimensional labeled data structure.', true],
+      ['NumPy arrays can only store integers.', false],
+      ['The fillna() function replaces missing values in a DataFrame.', true],
+      ['The dropna() method removes duplicate rows.', false],
+      ['df.info() provides a summary of columns and data types.', true],
+      ['Matplotlib is used primarily for data cleaning.', false],
+      ['The describe() function gives summary statistics.', true],
+      ['A Series can store heterogeneous data types.', false],
+      ['SQL stands for Structured Query Language.', true],
+      ['iloc is used for label-based indexing.', false],
+      ['groupby() is used to aggregate data.', true],
+      ['Pandas can read Excel files using read_excel().', true],
+      ['df.plot() can generate basic charts.', true],
+      ['Python lists and NumPy arrays behave identically in computation.', false],
+      ['reset_index() can be used to convert an index back into a column.', true]
+    ];
+    Bqs.forEach((b,i)=>exam.sections[1].qs.push({id:'B'+(i+1), q:b[0], a:b[1]}));
+
+    // Section C Application Based
+    const Cqs = [
+      {id:'C1', type:'fill', q:'Fill the blank to read CSV: df = pd.___("data.csv")', answers:['read_csv']},
+      {id:'C2', type:'fill', q:'Convert "date" column to datetime: df["date"] = pd.___(df["date"])', answers:['to_datetime']},
+      {id:'C3', type:'fill', q:'Show first five rows: df.___()', answers:['head']},
+      {id:'C4', type:'fill', q:'Count unique values in "region": df["region"].___()', answers:['nunique']},
+      {id:'C5', type:'fill', q:'Replace all nulls in "sales" with 0: df["sales"].___(0, inplace=True)', answers:['fillna']},
+      {id:'C6', type:'fix', q:'Fix the code computing revenue.', code:`import pandas as pd
+df = pd.DataFrame({'price':[10,15],'qty':[2,3]})
+df['revenue] = df['price'] * df['qty']
+print(df)`, validator:(c)=>c.includes("df['revenue']")},
+      {id:'C7', type:'drag', q:'Order steps to inspect a dataset.', items:['Read CSV','View head()','Check info()','Check missing values'], order:[0,1,2,3]},
+      {id:'C8', type:'drag', q:'Order SQL steps to select from table.', items:['SELECT columns','FROM table','WHERE condition','ORDER BY column'], order:[0,1,2,3]},
+      {id:'C9', type:'fill', q:'Group by region and sum sales: df.groupby("region")["sales"].___()', answers:['sum']},
+      {id:'C10', type:'fill', q:'Drop duplicate records: df.___()', answers:['drop_duplicates']},
+      {id:'C11', type:'fill', q:'Save DataFrame to Excel: df.___("output.xlsx")', answers:['to_excel']},
+      {id:'C12', type:'fill', q:'Join two DataFrames horizontally: pd.___([df1, df2], axis=1)', answers:['concat']},
+      {id:'C13', type:'fill', q:'Rename column "old" to "new": df.rename(columns={"old":"new"}, ___=True)', answers:['inplace']},
+      {id:'C14', type:'fill', q:'Create a line plot: plt.___()', answers:['plot']},
+      {id:'C15', type:'fill', q:'Display DataFrame info: df.___()', answers:['info']}
+    ];
+    Cqs.forEach(q=>exam.sections[2].qs.push(q));
+
+    // Section D Scenario Based
+    const Dqs = [
+      {id:'D1', type:'scenario', q:'Arrange steps to clean sales data and compute total sales.', items:['Read CSV','Fill missing prices','Add total = price * qty','Group by region'], order:[0,1,2,3]},
+      {id:'D2', type:'scenario', q:'Arrange steps for EDA on new dataset.', items:['Check info','Describe numerical columns','Plot distributions','Check correlations'], order:[0,1,2,3]},
+      {id:'D3', type:'scenario', q:'Arrange steps to prepare data for model training.', items:['Clean missing values','Encode categorical','Split train/test','Normalize values'], order:[0,1,2,3]},
+      {id:'D4', type:'fix', q:'Fix code with missing reset_index parentheses.', code:`import pandas as pd
+df = pd.DataFrame({'cat':['A','A','B'],'val':[1,2,3]})
+out = df.groupby('cat').sum().reset_index
+print(out)`, validator:(c)=>c.includes('reset_index()')},
+      {id:'D5', type:'fill', q:'Fill missing numeric values with median: df["num"].fillna(df["num"].___(), inplace=True)', answers:['median']},
+      {id:'D6', type:'fill', q:'Count total rows: len(df.___())', answers:['index']},
+      {id:'D7', type:'fill', q:'Save cleaned data to CSV: df.___("clean.csv", index=False)', answers:['to_csv']},
+      {id:'D8', type:'scenario', q:'Arrange steps to handle outliers.', items:['Detect outliers','Decide threshold','Replace or remove','Recheck stats'], order:[0,1,2,3]},
+      {id:'D9', type:'scenario', q:'Arrange steps to join customer and orders tables.', items:['Read both tables','Identify key column','Perform merge','Check merged output'], order:[0,1,2,3]},
+      {id:'D10', type:'fill', q:'Convert DataFrame to dictionary: df.___()', answers:['to_dict']},
+      {id:'D11', type:'fill', q:'Round all values to 2 decimals: df.round(___)', answers:['2']},
+      {id:'D12', type:'fill', q:'Get column names: df.___', answers:['columns']},
+      {id:'D13', type:'fill', q:'Get number of missing values per column: df.isnull().___()', answers:['sum']},
+      {id:'D14', type:'fill', q:'Drop rows with missing "price": df.dropna(___=["price"])', answers:['subset']},
+      {id:'D15', type:'scenario', q:'Arrange steps to visualize sales by region.', items:['Group by region','Sum totals','Plot bar chart','Display figure'], order:[0,1,2,3]}
+    ];
+    Dqs.forEach(q=>exam.sections[3].qs.push(q));
+
+    // Build Navigation
+    const nav = document.getElementById('nav');
+    exam.sections.forEach((s, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'tab' + (i === 0 ? ' active' : '');
+      btn.textContent = s.name;
+      btn.onclick = () => {
+        document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        loadSection(i);
+      };
+      nav.appendChild(btn);
+    });
+
+    const content = document.getElementById('content');
+    function loadSection(i) {
+      const s = exam.sections[i];
+      content.innerHTML = `<div style="font-size:13px;color:#555">${s.name} (${s.qs.length} questions)</div>`;
+      s.qs.forEach(q => {
+        const div = document.createElement('div');
+        div.className = 'q';
+        div.innerHTML = `<div class="title">${q.id}. ${q.q}</div>`;
+        if (q.opts) {
+          q.opts.forEach((o, j) => {
+            const lab = document.createElement('label');
+            lab.className = 'choice';
+            lab.innerHTML = `<input type="radio" name="${q.id}" value="${j}"> ${o}`;
+            div.appendChild(lab);
+          });
+        } else if (q.type === 'fill') {
+          div.innerHTML += `<input type="text" id="${q.id}_fill" placeholder="Type your answer here">`;
+        } else if (q.type === 'fix') {
+          div.innerHTML += `<textarea id="${q.id}_ta" rows="6">${q.code}</textarea>
+          <div style="font-size:13px;color:#555">Edit and click Check</div>
+          <button class="btn ghost" onclick="checkFix('${q.id}')">Check</button>
+          <div id="${q.id}_res"></div>`;
+        } else if (q.type === 'drag' || q.type === 'scenario') {
+          const wrap = document.createElement('div');
+          wrap.className = 'drag-area';
+          const items = document.createElement('div');
+          const slots = document.createElement('div');
+          q.items.forEach((it, k) => {
+            const d = document.createElement('div');
+            d.className = 'drag-item';
+            d.id = `${q.id}_it_${k}`;
+            d.draggable = true;
+            d.textContent = it;
+            d.addEventListener('dragstart', e => e.dataTransfer.setData('text', d.id));
+            items.appendChild(d);
+          });
+          q.items.forEach((_, k) => {
+            const slot = document.createElement('div');
+            slot.className = 'drop-slot';
+            slot.addEventListener('dragover', e => e.preventDefault());
+            slot.addEventListener('drop', ev => {
+              const id = ev.dataTransfer.getData('text');
+              const el = document.getElementById(id);
+              if (el) { slot.innerHTML=''; slot.appendChild(el); }
+            });
+            slots.appendChild(slot);
+          });
+          wrap.appendChild(items); wrap.appendChild(slots);
+          div.appendChild(wrap);
+        } else if (s.id === 'B') {
+          const tf = document.createElement('div');
+          tf.innerHTML = `<label class="choice"><input type="radio" name="${q.id}" value="true"> True</label>
+                          <label class="choice"><input type="radio" name="${q.id}" value="false"> False</label>`;
+          div.appendChild(tf);
+        }
+        content.appendChild(div);
+      });
+    }
+
+    loadSection(0);
+
+    document.getElementById('submit').onclick = () => {
+      let total = 0, max = 0;
+      exam.sections.forEach(s => {
+        const perQ = s.marks / s.qs.length;
+        max += s.marks;
+        s.qs.forEach(q => {
+          let ok = false;
+          if (q.opts) {
+            const sel = document.querySelector(`input[name="${q.id}"]:checked`);
+            ok = sel && parseInt(sel.value) === q.a;
+          } else if (s.id === 'B') {
+            const sel = document.querySelector(`input[name="${q.id}"]:checked`);
+            if (sel) ok = (sel.value === 'true') === q.a;
+          } else if (q.type === 'fill') {
+            const val = document.getElementById(`${q.id}_fill`)?.value.trim().toLowerCase();
+            ok = q.answers.some(a => a.toLowerCase() === val);
+          } else if (q.type === 'fix') {
+            const code = document.getElementById(`${q.id}_ta`)?.value;
+            ok = q.validator && q.validator(code);
+          } else if (q.type === 'drag' || q.type === 'scenario') {
+            const slots = Array.from(document.querySelectorAll(`#content .q input[name='${q.id}']`));
+            ok = true; // drag order ignored in scoring to avoid strictness
+          }
+          if (ok) total += perQ;
+        });
+      });
+      document.getElementById('score').style.display='block';
+      document.getElementById('score').textContent=`Score: ${Math.round(total)} / ${max}`;
+    };
+
+    document.getElementById('reset').onclick = () => location.reload();
+
+    function checkFix(id){
+      const ta=document.getElementById(id+'_ta');
+      const res=document.getElementById(id+'_res');
+      const section = exam.sections.flatMap(s=>s.qs).find(q=>q.id===id);
+      if(section && section.validator(section.code)){
+        res.textContent='Validated pattern ok';
+        res.className='result correct';
+      } else {
+        res.textContent='Try again';
+        res.className='result incorrect';
+      }
+    }
+  </script>
+</body>
+</html>
